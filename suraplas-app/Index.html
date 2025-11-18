@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>SURAPLÁS - Producción diaria</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --primary: #a4151f;
+      --primary-dark: #210407;
+      --bg: #101010;
+      --card-bg: #1b1b1b;
+      --border: #333;
+      --border-soft: #2a2a2a;
+      --text: #f5f5f5;
+      --muted: #b0b0b0;
+      --accent: #43a047;
+      --accent-dark: #2e7d32;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #2a2a2a, #000);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1024px;
+      background: #050505aa;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+
+    header {
+      background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+      padding: 14px 18px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .header-logo {
+      height: 80px;
+      object-fit: contain;
+    }
+
+    main {
+      padding: 12px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 8px;
+    }
+
+    h1 {
+      font-size: 20px;
+    }
+
+    h2 {
+      font-size: 16px;
+    }
+
+    h3 {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #181818;
+      color: var(--text);
+      font-size: 14px;
+      -webkit-appearance: none;
+      appearance: none;
+      position: relative;
+      cursor: pointer;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(60%);
+      opacity: 1;
+      cursor: pointer;
+    }
+
+    input[type="date"]:focus {
+      outline: none !important;
+      border-color: var(--border) !important;
+      box-shadow: none !important;
+    }
+
+    .turno-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .turno-btn {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #121212;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .turno-btn.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed var(--border);
+    }
+
+    .screen-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 14px;
+      gap: 8px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 8px;
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111;
+    }
+
+    th,
+    td {
+      border: 1px solid #252525;
+      padding: 4px 6px;
+      text-align: center;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    thead th {
+      font-weight: 600;
+      background: #212121;
+    }
+
+    th.product {
+      text-align: left;
+      background: #303030;
+    }
+
+    .table-title.banner {
+      background: linear-gradient(90deg, #a4151f, #210407);
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      margin-top: 22px;
+    }
+
+    input.qty {
+      width: 70px;
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #202020;
+      color: var(--text);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    input.qty[readonly] {
+      background: #111 !important;
+      border: none !important;
+      color: #444 !important;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1500;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #1e1e1e;
+      padding: 20px 18px;
+      border-radius: 14px;
+      width: 95%;
+      max-width: 480px;
+      border: 1px solid #444;
+      z-index: 2000;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+      gap: 10px;
+    }
+
+    .spaced {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .pill {
+      font-size: 13px;
+      background: #222;
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <header>
+      <img src="LOGO_SURAPLAS.png" class="header-logo" />
+    </header>
+
+    <main>
+
+      <!-- PANTALLA 1 -->
+      <section id="screen-start" class="screen active">
+        <div class="card">
+          <h1>Registrar producción</h1>
+          <h3>Selecciona fecha y turno para comenzar.</h3>
+
+          <div class="field-group">
+            <label>Fecha</label>
+            <input type="date" id="fecha-input" />
+          </div>
+
+          <div class="field-group">
+            <label>Turno</label>
+            <div class="turno-buttons">
+              <button class="turno-btn" data-turno="1">Turno 1</button>
+              <button class="turno-btn" data-turno="2">Turno 2</button>
+              <button class="turno-btn" data-turno="3">Turno 3</button>
+            </div>
+          </div>
+
+          <div class="screen-footer">
+            <button class="btn btn-outline" id="clear-start">Limpiar</button>
+            <button class="btn btn-primary" id="btn-empezar">Continuar →</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 2 -->
+      <section id="screen-table" class="screen">
+        <div class="card">
+
+          <div class="spaced">
+            <h1>Producción de mercancías</h1>
+            <div class="pill">
+              📅 <span id="pill-fecha">--/--/----</span> · ⏱️ Turno <span id="pill-turno">-</span>
+            </div>
+          </div>
+
+          <div id="alert-container"></div>
+
+          <!-- TABLA 1 -->
+          <div class="table-title banner">Cajas a granel</div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="product">Producto</th>
+                  <th>Blanco</th>
+                  <th>Bio</th>
+                  <th>Negro</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th class="product">Cuchara Grande (2500)</th>
+                  <td><input class="qty" data-key="granel_cg_blanco" /></td>
+                  <td><input class="qty" data-key="granel_cg_bio" /></td>
+                  <td><input class="qty" data-key="granel_cg_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande (2160)</th>
+                  <td><input class="qty" data-key="granel_tg_blanco" /></td>
+                  <td><input class="qty" data-key="granel_tg_bio" /></td>
+                  <td><input class="qty" data-key="granel_tg_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo (3600)</th>
+                  <td><input class="qty" data-key="granel_cllo_blanco" /></td>
+                  <td><input class="qty" data-key="granel_cllo_bio" /></td>
+                  <td><input class="qty" data-key="granel_cllo_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña (8000)</th>
+                  <td><input class="qty" data-key="granel_cp_blanco" /></td>
+                  <td><input class="qty" data-key="granel_cp_bio" /></td>
+                  <td><input class="qty" data-key="granel_cp_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña Transparente (8000)</th>
+                  <td><input class="qty" data-key="granel_cpt_blanco" /></td>
+                  <td><input class="qty" data-key="granel_cpt_bio" readonly /></td>
+                  <td><input class="qty" data-key="granel_cpt_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño (5120)</th>
+                  <td><input class="qty" data-key="granel_tp_blanco" /></td>
+                  <td><input class="qty" data-key="granel_tp_bio" /></td>
+                  <td><input class="qty" data-key="granel_tp_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Paleta (18000)</th>
+                  <td><input class="qty" data-key="granel_pta_blanco" /></td>
+                  <td><input class="qty" data-key="granel_pta_bio" /></td>
+                  <td><input class="qty" data-key="granel_pta_negro" readonly /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TABLA 2 -->
+          <div class="table-title banner">Cajas terminadas</div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="product">Producto</th>
+                  <th>Blanco</th>
+                  <th>Bio</th>
+                  <th>TUC</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th class="product">Cuchara Grande x100</th>
+                  <td><input class="qty" data-key="term_cgx100_blanco" /></td>
+                  <td><input class="qty" data-key="term_cgx100_bio" /></td>
+                  <td><input class="qty" data-key="term_cgx100_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Grande x20</th>
+                  <td><input class="qty" data-key="term_cgx20_blanco" /></td>
+                  <td><input class="qty" data-key="term_cgx20_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_cgx20_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande x100</th>
+                  <td><input class="qty" data-key="term_tgx100_blanco" /></td>
+                  <td><input class="qty" data-key="term_tgx100_bio" /></td>
+                  <td><input class="qty" data-key="term_tgx100_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande x20</th>
+                  <td><input class="qty" data-key="term_tgx20_blanco" /></td>
+                  <td><input class="qty" data-key="term_tgx20_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_tgx20_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo x100</th>
+                  <td><input class="qty" data-key="term_cllox100_blanco" /></td>
+                  <td><input class="qty" data-key="term_cllox100_bio" /></td>
+                  <td><input class="qty" data-key="term_cllox100_negro" /></td>
+                </tr>
+                <tr>
+                  <th class="product">Cuchillo x20</th>
+                  <td><input class="qty" data-key="term_cllox20_blanco" /></td>
+                  <td><input class="qty" data-key="term_cllox20_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_cllox20_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña x100</th>
+                  <td><input class="qty" data-key="term_cpx100_blanco" /></td>
+                  <td><input class="qty" data-key="term_cpx100_bio" /></td>
+                  <td><input class="qty" data-key="term_cpx100_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña x20</th>
+                  <td><input class="qty" data-key="term_cpx20_blanco" /></td>
+                  <td><input class="qty" data-key="term_cpx20_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_cpx20_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña Transparente x100</th>
+                  <td><input class="qty" data-key="term_cptx100_blanco" /></td>
+                  <td><input class="qty" data-key="term_cptx100_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_cptx100_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño x100</th>
+                  <td><input class="qty" data-key="term_tpx100_blanco" /></td>
+                  <td><input class="qty" data-key="term_tpx100_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_tpx100_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño x20</th>
+                  <td><input class="qty" data-key="term_tpx20_blanco" /></td>
+                  <td><input class="qty" data-key="term_tpx20_bio" /></td>
+                  <td><input class="qty" data-key="term_tpx20_negro" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Paleta x500</th>
+                  <td><input class="qty" data-key="term_ptax500_blanco" /></td>
+                  <td><input class="qty" data-key="term_ptax500_bio" readonly /></td>
+                  <td><input class="qty" data-key="term_ptax500_negro" readonly /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Rejiplas</th>
+                  <td><input class="qty" data-key="term_rejiplas_blanco" /></td>
+                  <td><input class="qty" data-key="term_rejiplas_bio" /></td>
+                  <td><input class="qty" data-key="term_rejiplas_negro" /></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TABLA 3 — Empaque -->
+          <div class="table-title banner">Empaque</div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="product">Empaque</th>
+                  <th>Mario sale</th>
+                  <th>Mario entra</th>
+                  <th>Cesar sale</th>
+                  <th>Cesar entra</th>
+                  <th>Bolsas</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                <tr>
+                  <th class="product">Cuchara Grande</th>
+                  <td><input class="qty" data-key="emp_cg_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cg_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cg_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cg_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cg_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande</th>
+                  <td><input class="qty" data-key="emp_tg_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_tg_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_tg_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_tg_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_tg_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo</th>
+                  <td><input class="qty" data-key="emp_cllo_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cllo_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cllo_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cllo_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cllo_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña</th>
+                  <td><input class="qty" data-key="emp_cp_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cp_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cp_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cp_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cp_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño</th>
+                  <td><input class="qty" data-key="emp_tp_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_tp_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_tp_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_tp_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_tp_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cubiertos x2</th>
+                  <td><input class="qty" data-key="emp_cx2_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx2_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx2_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx2_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx2_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cubiertos x3</th>
+                  <td><input class="qty" data-key="emp_cx3_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx3_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx3_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx3_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx3_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cubiertos x3 + Servilleta</th>
+                  <td><input class="qty" data-key="emp_cx3s_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx3s_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx3s_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_cx3s_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_cx3s_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Servilleta</th>
+                  <td><input class="qty" data-key="emp_serv_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_serv_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_serv_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_serv_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_serv_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Rechazo</th>
+                  <td><input class="qty" data-key="emp_rech_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_rech_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_rech_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_rech_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_rech_bolsas" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Paleta salón</th>
+                  <td><input class="qty" data-key="emp_paleta_mario_sale" /></td>
+                  <td><input class="qty" data-key="emp_paleta_mario_entra" /></td>
+                  <td><input class="qty" data-key="emp_paleta_cesar_sale" /></td>
+                  <td><input class="qty" data-key="emp_paleta_cesar_entra" /></td>
+                  <td><input class="qty" data-key="emp_paleta_bolsas" /></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <!-- TABLA 4 — Cajas -->
+          <div class="table-title banner">Cajas</div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th class="product">Cajas</th>
+                  <th>Cantidad</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <th class="product">Cuchara Grande</th>
+                  <td><input class="qty" data-key="cajas_cg" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Grande BIO</th>
+                  <td><input class="qty" data-key="cajas_cg_bio" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Grande TUC</th>
+                  <td><input class="qty" data-key="cajas_cg_tuc" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Grande x20</th>
+                  <td><input class="qty" data-key="cajas_cg_x20" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande</th>
+                  <td><input class="qty" data-key="cajas_tg" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande BIO</th>
+                  <td><input class="qty" data-key="cajas_tg_bio" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande TUC</th>
+                  <td><input class="qty" data-key="cajas_tg_tuc" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Grande x20</th>
+                  <td><input class="qty" data-key="cajas_tg_x20" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo</th>
+                  <td><input class="qty" data-key="cajas_cllo" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo BIO</th>
+                  <td><input class="qty" data-key="cajas_cllo_bio" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo TUC</th>
+                  <td><input class="qty" data-key="cajas_cllo_tuc" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchillo x20</th>
+                  <td><input class="qty" data-key="cajas_cllo_x20" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña</th>
+                  <td><input class="qty" data-key="cajas_cp" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña BIO</th>
+                  <td><input class="qty" data-key="cajas_cp_bio" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña DOMINGO</th>
+                  <td><input class="qty" data-key="cajas_cp_domingo" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cuchara Pequeña x20</th>
+                  <td><input class="qty" data-key="cajas_cp_x20" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño</th>
+                  <td><input class="qty" data-key="cajas_tp" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño BIO</th>
+                  <td><input class="qty" data-key="cajas_tp_bio" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño DOMINGO</th>
+                  <td><input class="qty" data-key="cajas_tp_domingo" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Tenedor Pequeño x20</th>
+                  <td><input class="qty" data-key="cajas_tp_x20" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Paleta</th>
+                  <td><input class="qty" data-key="cajas_paleta" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cubiertos x3</th>
+                  <td><input class="qty" data-key="cajas_cx3" /></td>
+                </tr>
+
+                <tr>
+                  <th class="product">Cubiertos x3 + Servilleta</th>
+                  <td><input class="qty" data-key="cajas_cx3s" /></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+          <div class="screen-footer">
+            <button class="btn btn-outline" id="btn-volver">← Volver</button>
+            <button class="btn btn-primary" id="btn-enviar">Enviar turno</button>
+          </div>
+
+        </div>
+      </section>
+      <!-- MODAL (Resumen) -->
+      <div id="modal-overlay" class="modal-overlay">
+        <div class="modal">
+          <h2 class="modal-title banner" id="modal-title">Resumen de producción</h2>
+          <div id="summary-list"></div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" id="btn-modal-back">Corregir</button>
+            <button class="btn btn-primary" id="btn-modal-confirm">Confirmar y enviar</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    /* -----------------------------------------------------
+      CONTROL DE FECHA (click en cualquier parte del input)
+    ------------------------------------------------------*/
+    const fechaInputClick = document.getElementById("fecha-input");
+
+    fechaInputClick.addEventListener("click", () => {
+      if (fechaInputClick.showPicker) fechaInputClick.showPicker();
+    });
+
+    /* CONTROL DE PANTALLAS */
+    const screenStart = document.getElementById("screen-start");
+    const screenTable = document.getElementById("screen-table");
+
+    const fechaInput = document.getElementById("fecha-input");
+    const turnoBtns = document.querySelectorAll(".turno-btn");
+    const btnEmpezar = document.getElementById("btn-empezar");
+    const btnVolver = document.getElementById("btn-volver");
+    const clearStart = document.getElementById("clear-start");
+    const alertContainer = document.getElementById("alert-container");
+
+    const pillFecha = document.getElementById("pill-fecha");
+    const pillTurno = document.getElementById("pill-turno");
+
+    let turnoSeleccionado = null;
+
+    /* Seleccionar turno */
+    turnoBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        turnoSeleccionado = btn.dataset.turno;
+
+        turnoBtns.forEach(b => b.classList.toggle("active", b === btn));
+      });
+    });
+
+    /* Continuar a tablas */
+    btnEmpezar.addEventListener("click", () => {
+      if (!fechaInput.value || !turnoSeleccionado) {
+        alertContainer.innerHTML =
+          `<div class="alert alert-error">Selecciona fecha y turno.</div>`;
+        return;
+      }
+
+      pillFecha.textContent = fechaInput.value;
+      pillTurno.textContent = turnoSeleccionado;
+
+      screenStart.classList.remove("active");
+      screenTable.classList.add("active");
+      alertContainer.innerHTML = "";
+    });
+
+    /* Volver */
+    btnVolver.addEventListener("click", () => {
+      screenTable.classList.remove("active");
+      screenStart.classList.add("active");
+    });
+
+    /* Limpiar */
+    clearStart.addEventListener("click", () => {
+      fechaInput.value = "";
+      turnoSeleccionado = null;
+      turnoBtns.forEach(b => b.classList.remove("active"));
+    });
+
+    /* ------------------------------
+        MODAL
+    ------------------------------*/
+    const modalOverlay = document.getElementById("modal-overlay");
+    const summaryList = document.getElementById("summary-list");
+    const btnEnviar = document.getElementById("btn-enviar");
+    const btnModalBack = document.getElementById("btn-modal-back");
+    const btnModalConfirm = document.getElementById("btn-modal-confirm");
+
+    function abrirModal() { modalOverlay.classList.add("active"); }
+    function cerrarModal() { modalOverlay.classList.remove("active"); }
+
+    /* -----------------------------------------------------
+       LISTA DE SECCIONES (para el resumen)
+    ------------------------------------------------------*/
+    const sections = [
+      {
+        title: "Cajas a granel",
+        keys: [
+          ["Cuchara Grande (2500)", "granel_cg_blanco","granel_cg_bio","granel_cg_negro"],
+          ["Tenedor Grande (2160)", "granel_tg_blanco","granel_tg_bio","granel_tg_negro"],
+          ["Cuchillo (3600)", "granel_cllo_blanco","granel_cllo_bio","granel_cllo_negro"],
+          ["Cuchara Pequeña (8000)", "granel_cp_blanco","granel_cp_bio","granel_cp_negro"],
+          ["Tenedor Pequeño (5120)", "granel_tp_blanco","granel_tp_bio","granel_tp_negro"],
+          ["Paleta (18000)", "granel_pta_blanco","granel_pta_bio","granel_pta_negro"]
+        ]
+      },
+
+      {
+        title: "Cajas terminadas",
+        keys: [
+          ["Cuchara Grande x100","term_cgx100_blanco","term_cgx100_bio","term_cgx100_negro"],
+          ["Cuchara Grande x20","term_cgx20_blanco","term_cgx20_bio","term_cgx20_negro"],
+          ["Tenedor Grande x100","term_tgx100_blanco","term_tgx100_bio","term_tgx100_negro"],
+          ["Tenedor Grande x20","term_tgx20_blanco","term_tgx20_bio","term_tgx20_negro"],
+          ["Cuchillo x100","term_cllox100_blanco","term_cllox100_bio","term_cllox100_negro"],
+          ["Cuchillo x20","term_cllox20_blanco","term_cllox20_bio","term_cllox20_negro"],
+          ["Cuchara Pequeña x100","term_cpx100_blanco","term_cpx100_bio","term_cpx100_negro"],
+          ["Cuchara Pequeña x20","term_cpx20_blanco","term_cpx20_bio","term_cpx20_negro"],
+          ["Cuchara Pequeña Transp x100","term_cptx100_blanco","term_cptx100_bio","term_cptx100_negro"],
+          ["Tenedor Pequeño x100","term_tpx100_blanco","term_tpx100_bio","term_tpx100_negro"],
+          ["Tenedor Pequeño x20","term_tpx20_blanco","term_tpx20_bio","term_tpx20_negro"],
+          ["Paleta x500","term_ptax500_blanco","term_ptax500_bio","term_ptax500_negro"],
+          ["Rejiplas","term_rejiplas_blanco","term_rejiplas_bio","term_rejiplas_negro"]
+        ]
+      },
+
+      {
+        title: "Empaque",
+        keys: [
+          ["Cuchara Grande","emp_cg_mario_sale","emp_cg_mario_entra","emp_cg_cesar_sale","emp_cg_cesar_entra","emp_cg_bolsas"],
+          ["Tenedor Grande","emp_tg_mario_sale","emp_tg_mario_entra","emp_tg_cesar_sale","emp_tg_cesar_entra","emp_tg_bolsas"],
+          ["Cuchillo","emp_cllo_mario_sale","emp_cllo_mario_entra","emp_cllo_cesar_sale","emp_cllo_cesar_entra","emp_cllo_bolsas"],
+          ["Cuchara Pequeña","emp_cp_mario_sale","emp_cp_mario_entra","emp_cp_cesar_sale","emp_cp_cesar_entra","emp_cp_bolsas"],
+          ["Tenedor Pequeño","emp_tp_mario_sale","emp_tp_mario_entra","emp_tp_cesar_sale","emp_tp_cesar_entra","emp_tp_bolsas"],
+          ["Cubiertos x2","emp_cx2_mario_sale","emp_cx2_mario_entra","emp_cx2_cesar_sale","emp_cx2_cesar_entra","emp_cx2_bolsas"],
+          ["Cubiertos x3","emp_cx3_mario_sale","emp_cx3_mario_entra","emp_cx3_cesar_sale","emp_cx3_cesar_entra","emp_cx3_bolsas"],
+          ["Cubiertos x3 + Servilleta","emp_cx3s_mario_sale","emp_cx3s_mario_entra","emp_cx3s_cesar_sale","emp_cx3s_cesar_entra","emp_cx3s_bolsas"],
+          ["Servilleta","emp_serv_mario_sale","emp_serv_mario_entra","emp_serv_cesar_sale","emp_serv_cesar_entra","emp_serv_bolsas"],
+          ["Rechazo","emp_rech_mario_sale","emp_rech_mario_entra","emp_rech_cesar_sale","emp_rech_cesar_entra","emp_rech_bolsas"],
+          ["Paleta salón","emp_paleta_mario_sale","emp_paleta_mario_entra","emp_paleta_cesar_sale","emp_paleta_cesar_entra","emp_paleta_bolsas"]
+        ]
+      },
+
+      {
+        title: "Cajas",
+        keys: [
+          ["Cuchara Grande","cajas_cg"],
+          ["Cuchara Grande BIO","cajas_cg_bio"],
+          ["Cuchara Grande TUC","cajas_cg_tuc"],
+          ["Cuchara Grande x20","cajas_cg_x20"],
+          ["Tenedor Grande","cajas_tg"],
+          ["Tenedor Grande BIO","cajas_tg_bio"],
+          ["Tenedor Grande TUC","cajas_tg_tuc"],
+          ["Tenedor Grande x20","cajas_tg_x20"],
+          ["Cuchillo","cajas_cllo"],
+          ["Cuchillo BIO","cajas_cllo_bio"],
+          ["Cuchillo TUC","cajas_cllo_tuc"],
+          ["Cuchillo x20","cajas_cllo_x20"],
+          ["Cuchara Pequeña","cajas_cp"],
+          ["Cuchara Pequeña BIO","cajas_cp_bio"],
+          ["Cuchara Pequeña DOMINGO","cajas_cp_domingo"],
+          ["Cuchara Pequeña x20","cajas_cp_x20"],
+          ["Tenedor Pequeño","cajas_tp"],
+          ["Tenedor Pequeño BIO","cajas_tp_bio"],
+          ["Tenedor Pequeño DOMINGO","cajas_tp_domingo"],
+          ["Tenedor Pequeño x20","cajas_tp_x20"],
+          ["Paleta","cajas_paleta"],
+          ["Cubiertos x3","cajas_cx3"],
+          ["Cubiertos x3 + Servilleta","cajas_cx3s"]
+        ]
+      }
+    ];
+
+    /* -----------------------------------------------------
+       ETIQUETAS EXTRA (Mario sale / entra / Cesar / Bolsas)
+    ------------------------------------------------------*/
+    const etiquetaEmpaque = {
+      emp_cg_mario_sale: "(Mario sale)", emp_cg_mario_entra: "(Mario entra)",
+      emp_cg_cesar_sale: "(Cesar sale)", emp_cg_cesar_entra: "(Cesar entra)",
+      emp_cg_bolsas: "(Bolsas)",
+
+      emp_tg_mario_sale: "(Mario sale)", emp_tg_mario_entra: "(Mario entra)",
+      emp_tg_cesar_sale: "(Cesar sale)", emp_tg_cesar_entra: "(Cesar entra)",
+      emp_tg_bolsas: "(Bolsas)",
+
+      emp_cllo_mario_sale: "(Mario sale)", emp_cllo_mario_entra: "(Mario entra)",
+      emp_cllo_cesar_sale: "(Cesar sale)", emp_cllo_cesar_entra: "(Cesar entra)",
+      emp_cllo_bolsas: "(Bolsas)",
+
+      emp_cp_mario_sale: "(Mario sale)", emp_cp_mario_entra: "(Mario entra)",
+      emp_cp_cesar_sale: "(Cesar sale)", emp_cp_cesar_entra: "(Cesar entra)",
+      emp_cp_bolsas: "(Bolsas)",
+
+      emp_tp_mario_sale: "(Mario sale)", emp_tp_mario_entra: "(Mario entra)",
+      emp_tp_cesar_sale: "(Cesar sale)", emp_tp_cesar_entra: "(Cesar entra)",
+      emp_tp_bolsas: "(Bolsas)",
+
+      emp_cx2_mario_sale: "(Mario sale)", emp_cx2_mario_entra: "(Mario entra)",
+      emp_cx2_cesar_sale: "(Cesar sale)", emp_cx2_cesar_entra: "(Cesar entra)",
+      emp_cx2_bolsas: "(Bolsas)",
+
+      emp_cx3_mario_sale: "(Mario sale)", emp_cx3_mario_entra: "(Mario entra)",
+      emp_cx3_cesar_sale: "(Cesar sale)", emp_cx3_cesar_entra: "(Cesar entra)",
+      emp_cx3_bolsas: "(Bolsas)",
+
+      emp_cx3s_mario_sale: "(Mario sale)", emp_cx3s_mario_entra: "(Mario entra)",
+      emp_cx3s_cesar_sale: "(Cesar sale)", emp_cx3s_cesar_entra: "(Cesar entra)",
+      emp_cx3s_bolsas: "(Bolsas)",
+
+      emp_serv_mario_sale: "(Mario sale)", emp_serv_mario_entra: "(Mario entra)",
+      emp_serv_cesar_sale: "(Cesar sale)", emp_serv_cesar_entra: "(Cesar entra)",
+      emp_serv_bolsas: "(Bolsas)",
+
+      emp_rech_mario_sale: "(Mario sale)", emp_rech_mario_entra: "(Mario entra)",
+      emp_rech_cesar_sale: "(Cesar sale)", emp_rech_cesar_entra: "(Cesar entra)",
+      emp_rech_bolsas: "(Bolsas)",
+
+      emp_paleta_mario_sale: "(Mario sale)", emp_paleta_mario_entra: "(Mario entra)",
+      emp_paleta_cesar_sale: "(Cesar sale)", emp_paleta_cesar_entra: "(Cesar entra)",
+      emp_paleta_bolsas: "(Bolsas)"
+    };
+
+    /* -----------------------------------------------------
+         GENERAR RESUMEN (MODAL)
+    ------------------------------------------------------*/
+    btnEnviar.addEventListener("click", () => {
+      summaryList.innerHTML = "";
+      let hayDatos = false;
+
+      document.getElementById("modal-title").textContent =
+        `Resumen de producción — Turno ${pillTurno.textContent} (${pillFecha.textContent})`;
+
+      sections.forEach(section => {
+        let bloque = "";
+        let tieneAlgo = false;
+
+        section.keys.forEach(item => {
+          const label = item[0];
+          const keys = item.slice(1);
+
+          keys.forEach(key => {
+            const input = document.querySelector(`[data-key="${key}"]`);
+            if (!input) return;
+
+            const val = input.value.trim();
+            if (val !== "" && val !== "0") {
+              tieneAlgo = true;
+              hayDatos = true;
+
+              let detalle = etiquetaEmpaque[key]
+                ? `<span style="font-size:11px; opacity:0.7;"> ${etiquetaEmpaque[key]}</span>`
+                : "";
+
+              bloque += `
+                <div class="summary-item">
+                  <span>${label} ${detalle}</span>
+                  <strong>${val}</strong>
+                </div>`;
+            }
+          });
+        });
+
+        if (tieneAlgo) {
+          summaryList.innerHTML += `
+            <h3 class="table-title banner">${section.title}</h3>
+            <div class="summary-section">${bloque}</div>
+          `;
+        }
+      });
+
+      if (!hayDatos) {
+        alertContainer.innerHTML =
+          `<div class="alert alert-error">No ingresaste ninguna cantidad.</div>`;
+        return;
+      }
+
+      abrirModal();
+    });
+
+    /* Cerrar modal (corregir) */
+    btnModalBack.addEventListener("click", cerrarModal);
+
+    /* -----------------------------------------------------
+        ENVIAR A GOOGLE APPS SCRIPT
+    ------------------------------------------------------*/
+    async function enviarProduccion() {
+      const url =
+        "https://script.google.com/macros/s/AKfycbwi2-xjNfephTtM3yVdMQ3w5wSK9sho3iC-IuF8r2DI1j3be3qkFt6gcF7BvD4OBH53/exec";
+
+      const data = {
+        fecha: document.getElementById("fecha-input").value,
+        turno: document.getElementById("pill-turno").textContent
+      };
+
+      document.querySelectorAll("input.qty").forEach(inp => {
+        const key = inp.dataset.key;
+        if (key) data[key] = inp.value === "" ? 0 : Number(inp.value);
+      });
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(data)
+        });
+
+        return await res.json();
+
+      } catch (e) {
+        return { ok: false, error: e };
+      }
+    }
+
+   btnModalConfirm.addEventListener("click", async () => {
+  cerrarModal();
+
+  // 1️⃣ GUARDAR UNA COPIA DE LOS DATOS ANTES DE LIMPIAR PANTALLA
+  const data = {
+  fecha: pillFecha.textContent,
+  turno: pillTurno.textContent
+};
+
+  document.querySelectorAll("input.qty").forEach(inp => {
+    const key = inp.dataset.key;
+    if (key) {
+      data[key] = inp.value === "" ? 0 : Number(inp.value);
+    }
+  });
+
+  // 2️⃣ VOLVER INMEDIATAMENTE A LA PANTALLA PRINCIPAL
+  document.querySelectorAll("input.qty").forEach(i => i.value = "");
+  screenTable.classList.remove("active");
+  screenStart.classList.add("active");
+  turnoSeleccionado = null;
+  turnoBtns.forEach(b => b.classList.remove("active"));
+  fechaInput.value = new Date().toISOString().split("T")[0];
+  alertContainer.innerHTML = "";
+
+  // 3️⃣ ENVIAR EN SEGUNDO PLANO SIN BLOQUEAR LA APP (URL CORRECTA)
+  fetch(
+    "https://script.google.com/macros/s/AKfycbwi2-xjNfephTtM3yVdMQ3w5wSK9sho3iC-IuF8r2DI1j3be3qkFt6gcF7BvD4OBH53/exec",
+    {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(data)
+    }
+  )
+    .then(r => r.json())
+    .then(res => console.log("Enviado:", res))
+    .catch(err => console.error("Error enviando:", err));
+});
+    /* -----------------------------------------------------
+        FECHA AUTOMÁTICA
+    ------------------------------------------------------*/
+    fechaInput.value = new Date().toISOString().split("T")[0];
+  </script>
+
+</body>
+</html>
